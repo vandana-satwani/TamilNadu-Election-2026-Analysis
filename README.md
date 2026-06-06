@@ -25,11 +25,11 @@ realignment.
 - Source: Election Commission of India (eci.gov.in)
 
 ### Tools Used
-- Python / SQL — Data cleaning and analysis
+- SQL — Data cleaning and analysis
 - Power BI — Dashboard and visualisation
 - PowerPoint — Stakeholder presentation
 ### Files in this Repository
-- analysis_notebook.ipynb — Full Python/SQL analysis
+- analysis_notebook.ipynb — Full SQL analysis
 - dashboard.pbix — Power BI dashboard
 - presentation.pptx — AtliQ Media stakeholder deck
 
