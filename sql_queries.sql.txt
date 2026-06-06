@@ -1,0 +1,153 @@
+-- =====================================================
+-- TN ELECTION ANALYSIS PROJECT
+-- SQL QUERIES
+-- Author: Vandana
+-- =====================================================
+
+-- =====================================================
+-- DATABASE
+-- =====================================================
+
+USE tn_election;
+
+-- =====================================================
+-- CHECK CONSTITUENCY MASTER TABLE
+-- =====================================================
+
+SELECT *
+FROM constituency_master_clean;
+
+SELECT COUNT(*) AS total_constituencies
+FROM constituency_master_clean;
+
+-- =====================================================
+-- CREATE WINNERS TABLE FOR 2021
+-- =====================================================
+
+CREATE TABLE winners_2021 AS
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY ac_number
+               ORDER BY votes DESC
+           ) AS rn
+    FROM tn_2021_clean
+) x
+WHERE rn = 1;
+
+-- CHECK WINNERS_2021 TABLE
+
+SELECT COUNT(*) AS total_winners_2021
+FROM winners_2021;
+
+SELECT *
+FROM winners_2021
+LIMIT 10;
+
+-- =====================================================
+-- FIX COLUMN NAME ISSUE
+-- =====================================================
+
+ALTER TABLE winners_2021
+CHANGE COLUMN `ï»¿constituency` constituency TEXT;
+
+ALTER TABLE winners_2026
+CHANGE COLUMN `ï»¿constituency` constituency TEXT;
+
+-- =====================================================
+-- CREATE WINNERS TABLE FOR 2026
+-- =====================================================
+
+CREATE TABLE winners_2026 AS
+SELECT *
+FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (
+               PARTITION BY ac_number
+               ORDER BY votes DESC
+           ) AS rn
+    FROM tn_2026_clean
+) x
+WHERE rn = 1;
+
+-- CHECK WINNERS_2026 TABLE
+
+SELECT COUNT(*) AS total_winners_2026
+FROM winners_2026;
+
+SELECT *
+FROM winners_2026
+LIMIT 10;
+
+-- =====================================================
+-- CREATE CONSTITUENCY FLIP ANALYSIS TABLE
+-- =====================================================
+
+CREATE TABLE constituency_flips AS
+SELECT 
+    a.ac_number,
+    a.constituency,
+    a.party AS winner_2021,
+    b.party AS winner_2026,
+    a.region,
+    
+    CASE
+        WHEN a.party = b.party THEN 'No Flip'
+        ELSE 'Flipped'
+    END AS flip_status
+
+FROM winners_2021 a
+
+JOIN winners_2026 b
+ON a.ac_number = b.ac_number;
+
+-- CHECK CONSTITUENCY FLIPS
+
+SELECT *
+FROM constituency_flips;
+
+-- =====================================================
+-- TOTAL FLIPPED VS NON-FLIPPED SEATS
+-- =====================================================
+
+SELECT 
+    flip_status,
+    COUNT(*) AS total_seats
+FROM constituency_flips
+GROUP BY flip_status;
+
+-- =====================================================
+-- REGION-WISE FLIP ANALYSIS
+-- =====================================================
+
+SELECT 
+    region,
+    flip_status,
+    COUNT(*) AS seats
+FROM constituency_flips
+GROUP BY region, flip_status
+ORDER BY region;
+
+-- =====================================================
+-- PARTY-TO-PARTY SEAT MOVEMENT ANALYSIS
+-- =====================================================
+
+CREATE TABLE flip_flow AS
+
+SELECT 
+    winner_2021,
+    winner_2026,
+    COUNT(*) AS seats
+
+FROM constituency_flips
+
+GROUP BY winner_2021, winner_2026;
+
+-- CHECK PARTY FLOW TABLE
+
+SELECT *
+FROM flip_flow
+ORDER BY seats DESC;
+
+-- =====================================================               
